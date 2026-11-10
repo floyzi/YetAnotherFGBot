@@ -92,7 +92,7 @@ namespace YetAnotherFGBot.Discord.Commands
                             var eosUserTokenResp = await client.SendAsync(eosUserTokenReq);
                             eosUserTokenResp.EnsureSuccessStatusCode();
 
-                            var eosUserTokenJson = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(await eosUserTokenResp.Content.ReadAsStringAsync());
+                            var eosUserTokenJson = JsonSerializer.Deserialize<JsonElement>(await eosUserTokenResp.Content.ReadAsStringAsync());
                             var eosToken = eosUserTokenJson.GetProperty("access_token").GetString();
                             var productId = eosUserTokenJson.GetProperty("product_user_id").GetString();
 

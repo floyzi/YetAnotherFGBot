@@ -58,7 +58,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             }
 
             embed.WithColor(Color.Orange);
-            embed.WithDescription($"To log in to your Fall Guys account click on the button below (or [here]({request.Item1.CompleteVerificationURL})).\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.");
+            embed.WithDescription($"This command requires you to log in, click on the button below (or [here]({request.Item1.CompleteVerificationURL})) to continue.\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.\n-# See about to learn more how this works");
             embed.WithFooter($"Link will expire in {TimeSpan.FromSeconds(request.Item1.ExpiresIn).Minutes} minutes");
             embed.WithCurrentTimestamp();
 
@@ -82,7 +82,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             EOSTokenResponse = tokenResponse.Item1;
 
             embed.Footer = null;
-            embed.WithDescription($"Logging in Fall Guys...");
+            embed.WithDescription($"EOS login completed, logging in Fall Guys...");
             await ModifyOriginalResponseAsync(props =>
             {
                 props.Embed = embed.Build();
