@@ -10,7 +10,11 @@ namespace YetAnotherFGBot.Commands
         [SlashCommand("crown-count", "Crown Count")]
         public async Task Ping()
         {
-            await RespondAsync($"Pong! {Context.Client.Latency}ms", ephemeral: true);
+            var loginProcessor = new FGLoginProcessor(Context.Interaction);
+
+            await DeferAsync(true);
+
+            await loginProcessor.RequestEOSLogin();
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace YetAnotherFGBot.Models
 {
-    internal class EOSLoginRequest
+    internal class EOSDeviceAuth
     {
         [JsonPropertyName("user_code")]
         public string? UserCode { get; set; }
@@ -27,5 +27,7 @@ namespace YetAnotherFGBot.Models
 
         [JsonPropertyName("client_id")]
         public string? ClientID { get; set; }
+
+        public bool IsValid() => !string.IsNullOrEmpty(DeviceCode) && !string.IsNullOrEmpty(VerificationURL);
     }
 }
