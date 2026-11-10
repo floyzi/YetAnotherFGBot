@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.Json;
 using YetAnotherFGBot.Discord.ModuleExtension;
 
-namespace YetAnotherFGBot.Discord.Commands
+namespace YetAnotherFGBot.Discord.Commands.FallGuys
 {
     public class BanCheck : FGGatewayModule
     {

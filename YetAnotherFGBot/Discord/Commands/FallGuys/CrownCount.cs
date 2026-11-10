@@ -8,7 +8,7 @@ using FallGuys.Player.Protocol.Client.PlayerLevel;
 using System.Net.WebSockets;
 using YetAnotherFGBot.Discord.ModuleExtension;
 
-namespace YetAnotherFGBot.Discord.Commands
+namespace YetAnotherFGBot.Discord.Commands.FallGuys
 {
     public class CrownCount : FGGatewayModule
     {

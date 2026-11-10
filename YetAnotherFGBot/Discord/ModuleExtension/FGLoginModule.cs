@@ -195,6 +195,8 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
 
         async Task<(HttpLoginResponse, HttpStatusCode)> FGLogin()
         {
+            if (string.IsNullOrEmpty(EOSToken)) throw new InvalidOperationException();
+
             using var client = new HttpClient();
 
             var loginReq = new HttpRequestMessage(HttpMethod.Post, FG_LOGIN)
@@ -209,17 +211,17 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             var authRespBody = await authResp.Content.ReadAsStringAsync();
 
 
-            if (authResp.StatusCode != System.Net.HttpStatusCode.OK)
-                return new(null, authResp.StatusCode);
+            if (authResp.StatusCode != HttpStatusCode.OK)
+                return new(null!, authResp.StatusCode);
 
             try
             {
                 var json = JsonSerializer.Deserialize<HttpLoginResponse>(authRespBody);
-                return new(json, authResp.StatusCode);
+                return new(json!, authResp.StatusCode);
             }
             catch
             {
-                return new(null, authResp.StatusCode);
+                return new(null!, authResp.StatusCode);
             }
         }
     }
