@@ -15,7 +15,7 @@ namespace YetAnotherFGBot
         {
             _config = JsonSerializer.Deserialize<Config>(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "config.json"))) ?? throw new InvalidOperationException();
 
-            RuntimeProtocol.Initialize(true);
+            RuntimeProtocol.Initialize();
 
             _bot = new(_config.BotToken);
 
