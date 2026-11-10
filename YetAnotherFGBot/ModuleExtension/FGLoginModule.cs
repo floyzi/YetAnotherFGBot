@@ -16,12 +16,14 @@ namespace YetAnotherFGBot.ModuleExtension
         const string VERSION_INFO = "https://floyzi-gitlab-io.vercel.app/fallguys/version.json";
         const string DEVICE_AUTH = "https://api.epicgames.dev/epic/oauth/v2/deviceAuthorization";
         const string EOS_TOKEN = "https://api.epicgames.dev/epic/oauth/v2/token";
+        const string FG_LOGIN = "https://login.fallguys.oncatapult.com/api/v1/login";
 
-        FGVersionInfo? _version;
-
+        protected FGVersionInfo? Version;
         protected string? EOSToken;
+        protected string? FGToken;
+        protected string? EOSName;
 
-        internal async Task RequestEOSLogin()
+        internal async Task<bool> RequestFGLogin()
         {
             var embed = new EmbedBuilder();
             var comp = new ComponentBuilder();
@@ -31,16 +33,17 @@ namespace YetAnotherFGBot.ModuleExtension
 
             var verResp = await client.SendAsync(verReq);
             var verRespBody = await verResp.Content.ReadAsStringAsync();
-            _version = JsonSerializer.Deserialize<FGVersionInfo>(verRespBody);
+            Version = JsonSerializer.Deserialize<FGVersionInfo>(verRespBody);
 
             embed.WithTitle("FALL GUYS LOGIN");
 
-            if (_version == null)
+            if (Version == null)
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Coldn't obtain version info, try again later.");
                 await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
-                return;
+                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                return false;
             }
 
             var request = await CreateEOSLoginRequest();
@@ -49,7 +52,8 @@ namespace YetAnotherFGBot.ModuleExtension
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Unable to create login request (http {request.Item2}), try again later.");
-                return;
+                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                return false;
             }
 
             embed.WithColor(Color.Orange);
@@ -66,11 +70,29 @@ namespace YetAnotherFGBot.ModuleExtension
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Item2}), try again later.");
-                return;
+                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                return false;
             }
 
             EOSToken = tokenResponse.Item1.AccessToken;
             Console.WriteLine(EOSToken);
+
+            var fgToken = await FGLogin();
+            if (fgToken.Item1 == null || !fgToken.Item1.IsValid())
+            {
+                embed.WithColor(Color.Red);
+                embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Item2}), try again later.");
+                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                return false;
+            }
+
+            FGToken = fgToken.Item1.Token;
+            if (fgToken.Item1.AdditionalProperties == null) return false;
+
+            EOSName = fgToken.Item1.AdditionalProperties["EosDisplayName"];
+            Console.WriteLine(FGToken);
+
+            return !string.IsNullOrEmpty(EOSToken) && !string.IsNullOrEmpty(FGToken);
         }
 
         async Task<(EOSDeviceAuth, HttpStatusCode)> CreateEOSLoginRequest()
@@ -80,8 +102,8 @@ namespace YetAnotherFGBot.ModuleExtension
             var response = await client.PostAsync(DEVICE_AUTH, new FormUrlEncodedContent(
             [
                 new("prompt", "login"),
-                new("client_id", _version!.ClientId),
-                new("client_secret", _version.ClientSecret)
+                new("client_id", Version!.ClientId),
+                new("client_secret", Version.ClientSecret)
             ]));
 
             var responseBody = await response.Content.ReadAsStringAsync();
@@ -105,7 +127,7 @@ namespace YetAnotherFGBot.ModuleExtension
             var sw = new Stopwatch();
             sw.Start();
 
-            var clientAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_version!.ClientId}:{_version!.ClientSecret}"));
+            var clientAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{Version!.ClientId}:{Version!.ClientSecret}"));
             using var client = new HttpClient();
 
             while (sw.Elapsed.Seconds < loginRequest.ExpiresIn)
@@ -113,7 +135,7 @@ namespace YetAnotherFGBot.ModuleExtension
                 FormUrlEncodedContent payload = new(
                 [
                     new("grant_type", "device_code"),
-                    new("deployment_id", _version!.Deployment),
+                    new("deployment_id", Version!.Deployment),
                     new("scope", "basic_profile openid"),
                     new("device_code", loginRequest.DeviceCode),
                 ]);
@@ -153,6 +175,36 @@ namespace YetAnotherFGBot.ModuleExtension
             sw.Stop();
 
             return new();
+        }
+
+        async Task<(HttpLoginResponse, HttpStatusCode)> FGLogin()
+        {
+            using var client = new HttpClient();
+
+            var loginReq = new HttpRequestMessage(HttpMethod.Post, FG_LOGIN)
+            {
+                Content = new StringContent(LoginModel.Create(EOSToken, Version!), Encoding.UTF8, "application/json"),
+            };
+            loginReq.Headers.Add("X-Unity-Version", Version!.UnityVersion);
+            loginReq.Headers.Add("User-Agent", $"UnityPlayer/{Version.UnityVersion} (UnityWebRequest/1.0, libcurl/7.84.0-DEV)");
+
+
+            var authResp = await client.SendAsync(loginReq);
+            var authRespBody = await authResp.Content.ReadAsStringAsync();
+
+
+            if (authResp.StatusCode != System.Net.HttpStatusCode.OK)
+                return new(null, authResp.StatusCode);
+
+            try
+            {
+                var json = JsonSerializer.Deserialize<HttpLoginResponse>(authRespBody);
+                return new(json, authResp.StatusCode);
+            }
+            catch
+            {
+                return new(null, authResp.StatusCode);
+            }
         }
     }
 }

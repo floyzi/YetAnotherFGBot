@@ -36,5 +36,7 @@ namespace YetAnotherFGBot.Models
 
         [JsonPropertyName("clientFeatures")]
         public Dictionary<string, bool>? ClientFeatures { get; set; }
+
+        public bool IsValid() => !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(ContentUrl);
     }
 }

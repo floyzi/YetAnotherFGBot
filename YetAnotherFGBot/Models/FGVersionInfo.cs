@@ -2,7 +2,7 @@
 
 namespace YetAnotherFGBot.Models
 {
-    internal class FGVersionInfo
+    public class FGVersionInfo
     {
         [JsonPropertyName("clientVersion")]
         public string? Version { get; set; }
