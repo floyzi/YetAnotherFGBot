@@ -13,4 +13,8 @@
     <PackageReference Include="Discord.Net" Version="3.20.2" />
   </ItemGroup>
 
+	<Import Project="FLZ_BuildTargets.targets" />
+	<ItemGroup>
+		<None Update="FLZ_BuildTargets.targets" Visible="false" />
+	</ItemGroup>
 </Project>

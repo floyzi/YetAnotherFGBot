@@ -32,8 +32,6 @@ namespace YetAnotherFGBot.Discord.Commands.FallGuys
 
         internal override async Task Receive(Message message)
         {
-            Console.WriteLine(message.GetTypeName());
-
             switch (message)
             {
                 case Result<AuthenticationResponse>:
@@ -44,10 +42,11 @@ namespace YetAnotherFGBot.Discord.Commands.FallGuys
                     break;
                 case Result<PlayerLevelDto> level:
                     var embed = new EmbedBuilder();
-                    embed.WithColor(Color.Green);
+                    embed.WithColor(Color.Gold);
                     embed.WithTitle("CROWN COUNT");
                     embed.WithThumbnailUrl(Emotes.Crown.Url);
                     embed.WithDescription($"Account ``{EOSName}`` has **{level.Body?.EarnedCrowns:N0}** crowns");
+                    embed.WithCurrentTimestamp();
 
                     await _pullMsg!.ModifyAsync(props =>
                     {

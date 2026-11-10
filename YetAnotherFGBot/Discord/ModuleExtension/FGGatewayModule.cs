@@ -35,7 +35,6 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
 
                     } while (!res.EndOfMessage);
 
-                    Console.WriteLine(Convert.ToHexString(ms.ToArray()));
                     await Receive(RuntimeProtocol.ReadMessage(ms));
                 }
             }
