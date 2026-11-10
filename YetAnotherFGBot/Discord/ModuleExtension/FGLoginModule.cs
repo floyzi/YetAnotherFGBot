@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using YetAnotherFGBot.Models;
 
-namespace YetAnotherFGBot.ModuleExtension
+namespace YetAnotherFGBot.Discord.ModuleExtension
 {
     public class FGLoginModule : InteractionModuleBase<SocketInteractionContext>
     {

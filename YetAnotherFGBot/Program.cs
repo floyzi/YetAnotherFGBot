@@ -3,6 +3,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using System.Text.Json;
+using YetAnotherFGBot.Discord;
 using YetAnotherFGBot.Models;
 
 namespace YetAnotherFGBot

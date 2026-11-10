@@ -4,7 +4,7 @@ using Catapult.Services.Gateway.Protocol.Client;
 using System.Net.WebSockets;
 using YetAnotherFGBot.Models;
 
-namespace YetAnotherFGBot.ModuleExtension
+namespace YetAnotherFGBot.Discord.ModuleExtension
 {
     public abstract class FGGatewayModule : FGLoginModule
     {

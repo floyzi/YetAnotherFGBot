@@ -3,14 +3,12 @@ using Catapult.Runtime.Protocol;
 using Catapult.Services.Gateway.Protocol.Client;
 using Discord;
 using Discord.Interactions;
-using Discord.Net;
 using Discord.Rest;
 using FallGuys.Player.Protocol.Client.PlayerLevel;
-using FallGuys.Player.Protocol.Client.Profile;
 using System.Net.WebSockets;
-using YetAnotherFGBot.ModuleExtension;
+using YetAnotherFGBot.Discord.ModuleExtension;
 
-namespace YetAnotherFGBot.Commands
+namespace YetAnotherFGBot.Discord.Commands
 {
     public class CrownCount : FGGatewayModule
     {
@@ -45,12 +43,10 @@ namespace YetAnotherFGBot.Commands
                     }), WebSocketMessageType.Binary, true, CancellationToken.None);
                     break;
                 case Result<PlayerLevelDto> level:
-                    var emoji = new Emote(1569735482596917349, "UI_currency_crown_outline");
-
                     var embed = new EmbedBuilder();
                     embed.WithColor(Color.Green);
                     embed.WithTitle("CROWN COUNT");
-                    embed.WithThumbnailUrl(emoji.Url);
+                    embed.WithThumbnailUrl(Emotes.Crown.Url);
                     embed.WithDescription($"Account ``{EOSName}`` has **{level.Body?.EarnedCrowns:N0}** crowns");
 
                     await _pullMsg!.ModifyAsync(props =>

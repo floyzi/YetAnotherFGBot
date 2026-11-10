@@ -2,7 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace YetAnotherFGBot
+namespace YetAnotherFGBot.Discord
 {
     internal class Bot
     {
