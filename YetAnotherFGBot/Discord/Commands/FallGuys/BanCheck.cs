@@ -130,6 +130,7 @@ namespace YetAnotherFGBot.Discord.Commands.FallGuys
                         else
                         {
                             sb.Append($" And i couldn't check if it has game access sanctions, you need to re-login to resolve this issue (your token expired {TimestampTag.FromDateTime(EOSTokenResponse.ExpiresAt, TimestampTagStyles.Relative)})");
+                            embed.WithThumbnailUrl(embed.Color == Color.Red ? Emotes.Lock.Url : Emotes.LockOpen.Url);
                             embed.WithColor(isBanned ? Color.Red : Color.Green);
                         }
 

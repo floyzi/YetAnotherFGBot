@@ -12,5 +12,7 @@ namespace YetAnotherFGBot.Discord
         internal static Emote Lock { get; } = new Emote(1569753734295068782, "UI_SeasonPass_Lock");
         internal static Emote LockOpen { get; } = new Emote(1569753871943864501, "UI_SeasonPass_LockOpen");
         internal static Emote Tick { get; } = new Emote(1569753970635968522, "Icon_Tick_Large");
+        internal static Emote Credits { get; } = new Emote(1569754275372859513, "UI_Icon_Credits");
+        internal static Emote Cross { get; } = new Emote(1569754918821302334, "UI_X_Icon");
     }
 }

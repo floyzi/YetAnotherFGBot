@@ -14,6 +14,7 @@ namespace YetAnotherFGBot.Discord.Commands
             var embed = new EmbedBuilder();
             embed.WithColor(Color.Default);
             embed.WithTitle("ABOUT");
+            embed.WithThumbnailUrl(Emotes.Credits.Url);
 
             var sb = new StringBuilder();
             embed.WithDescription(sb.ToString());
