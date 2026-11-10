@@ -1,18 +1,24 @@
 ﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.VisualBasic;
 
 namespace YetAnotherFGBot
 {
     internal class Bot
     {
-        static DiscordSocketClient? _client;
+        readonly DiscordSocketClient? _client;
+        readonly InteractionService? _interactions;
 
         internal Bot(string? token)
         {
             if (string.IsNullOrEmpty(token)) return;
 
             _client = new DiscordSocketClient();
+            _interactions = new(_client.Rest);
+
             _client.Log += Log;
+            _client.InteractionCreated += HandleInteraction;
 
             _ = LoginWithToken(token);
         }
@@ -24,24 +30,22 @@ namespace YetAnotherFGBot
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
-            _client.SlashCommandExecuted += HandleSlashCommand;
             _client.Ready += async () =>
             {
-                var crowsCommand = new SlashCommandBuilder().WithName("crown-count").WithDescription("Crown Count").Build();
-                await _client.CreateGlobalApplicationCommandAsync(crowsCommand);
+                if (_interactions == null) return;
+
+                await _interactions.AddModulesAsync(typeof(Bot).Assembly, null);
+                await _interactions.RegisterCommandsGloballyAsync();
             };
 
             await Task.Delay(-1);
         }
 
-        async Task HandleSlashCommand(SocketSlashCommand command)
+        async Task HandleInteraction(SocketInteraction interaction)
         {
-            switch (command.Data.Name)
-            {
-                case "crown-count":
-                    await command.RespondAsync("Pong!");
-                    break;
-            }
+            if (_interactions == null) return;
+
+            await _interactions.ExecuteCommandAsync(new SocketInteractionContext(_client, interaction), null);
         }
 
         async Task Log(LogMessage message)
