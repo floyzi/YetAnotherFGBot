@@ -2,7 +2,7 @@
 
 namespace YetAnotherFGBot.Models
 {
-    internal class HttpLoginResponse
+    public class HttpLoginResponse
     {
         [JsonPropertyName("token")]
         public string? Token { get; set; }

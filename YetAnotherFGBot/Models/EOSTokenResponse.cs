@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace YetAnotherFGBot.Models
 {
-    internal class EOSTokenResponse
+    public class EOSTokenResponse
     {
         [JsonPropertyName("access_token")]
         public string? AccessToken { get; set; }
@@ -14,5 +14,6 @@ namespace YetAnotherFGBot.Models
         public DateTime ExpiresAt { get; set; }
 
         public bool IsValid() => !string.IsNullOrEmpty(AccessToken);
+        public bool IsExpired() => DateTime.UtcNow > ExpiresAt.ToUniversalTime();
     }
 }

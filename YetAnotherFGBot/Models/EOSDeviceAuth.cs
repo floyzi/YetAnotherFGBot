@@ -2,7 +2,7 @@
 
 namespace YetAnotherFGBot.Models
 {
-    internal class EOSDeviceAuth
+    public class EOSDeviceAuth
     {
         [JsonPropertyName("user_code")]
         public string? UserCode { get; set; }

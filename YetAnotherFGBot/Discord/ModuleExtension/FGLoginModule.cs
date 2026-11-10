@@ -15,12 +15,14 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
     {
         const string VERSION_INFO = "https://floyzi-gitlab-io.vercel.app/fallguys/version.json";
         const string DEVICE_AUTH = "https://api.epicgames.dev/epic/oauth/v2/deviceAuthorization";
-        const string EOS_TOKEN = "https://api.epicgames.dev/epic/oauth/v2/token";
+        const string EOS_V2_TOKEN = "https://api.epicgames.dev/epic/oauth/v2/token";
         const string FG_LOGIN = "https://login.fallguys.oncatapult.com/api/v1/login";
 
         protected FGVersionInfo? Version;
-        protected string? EOSToken;
-        protected string? FGToken;
+        protected EOSTokenResponse? EOSTokenResponse;
+        protected string? EOSToken => EOSTokenResponse?.AccessToken;
+        protected HttpLoginResponse? FGLoginResponse;
+        protected string? FGToken => FGLoginResponse?.Token;
         protected string? EOSName;
 
         protected async Task<bool> RequestFGLogin()
@@ -77,7 +79,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                 return false;
             }
 
-            EOSToken = tokenResponse.Item1.AccessToken;
+            EOSTokenResponse = tokenResponse.Item1;
 
             embed.Footer = null;
             embed.WithDescription($"Logging in Fall Guys...");
@@ -100,7 +102,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                 return false;
             }
 
-            FGToken = fgToken.Item1.Token;
+            FGLoginResponse = fgToken.Item1;
             if (fgToken.Item1.AdditionalProperties == null) return false;
 
             EOSName = fgToken.Item1.AdditionalProperties["EosDisplayName"];
@@ -154,7 +156,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                     new("device_code", loginRequest.DeviceCode),
                 ]);
 
-                var request = new HttpRequestMessage(HttpMethod.Post, EOS_TOKEN)
+                var request = new HttpRequestMessage(HttpMethod.Post, EOS_V2_TOKEN)
                 {
                     Content = payload,
                     Headers = {

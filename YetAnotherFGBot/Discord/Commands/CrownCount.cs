@@ -15,7 +15,7 @@ namespace YetAnotherFGBot.Discord.Commands
         RestFollowupMessage? _pullMsg;
 
         [SlashCommand("crown-count", "See your current Fall Guys crown count")]
-        public async Task PullCrowns()
+        public async Task Run()
         {
             await DeferAsync(true);
             if (!await RequestFGLogin()) return;
@@ -53,6 +53,8 @@ namespace YetAnotherFGBot.Discord.Commands
                     {
                         props.Embed = embed.Build();
                     });
+
+                    await GatewayConnection!.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                     break;
             }
         }
