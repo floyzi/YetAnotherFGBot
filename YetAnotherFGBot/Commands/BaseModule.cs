@@ -1,20 +1,15 @@
 ﻿using Discord.Interactions;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using YetAnotherFGBot.ModuleExtension;
 
 namespace YetAnotherFGBot.Commands
 {
-    public class BaseModule : InteractionModuleBase<SocketInteractionContext>
+    public class BaseModule : FGGatewayModule
     {
-        [SlashCommand("crown-count", "Crown Count")]
+        [SlashCommand("crown-count", "See your current Fall Guys crown count")]
         public async Task Ping()
         {
-            var loginProcessor = new FGLoginProcessor(Context.Interaction);
-
             await DeferAsync(true);
-
-            await loginProcessor.RequestEOSLogin();
+            await RequestEOSLogin();
         }
     }
 }

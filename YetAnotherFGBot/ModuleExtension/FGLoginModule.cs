@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -8,16 +9,17 @@ using System.Text;
 using System.Text.Json;
 using YetAnotherFGBot.Models;
 
-namespace YetAnotherFGBot
+namespace YetAnotherFGBot.ModuleExtension
 {
-    internal class FGLoginProcessor(SocketInteraction interaction)
+    public class FGLoginModule : InteractionModuleBase<SocketInteractionContext>
     {
         const string VERSION_INFO = "https://floyzi-gitlab-io.vercel.app/fallguys/version.json";
         const string DEVICE_AUTH = "https://api.epicgames.dev/epic/oauth/v2/deviceAuthorization";
         const string EOS_TOKEN = "https://api.epicgames.dev/epic/oauth/v2/token";
 
-        readonly SocketInteraction _interaction = interaction;
         FGVersionInfo? _version;
+
+        protected string? EOSToken;
 
         internal async Task RequestEOSLogin()
         {
@@ -37,7 +39,7 @@ namespace YetAnotherFGBot
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Coldn't obtain version info, try again later.");
-                await _interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
+                await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
                 return;
             }
 
@@ -56,7 +58,7 @@ namespace YetAnotherFGBot
             embed.WithCurrentTimestamp();
 
             var builder = comp.WithButton("Login", style: ButtonStyle.Link, url: request.Item1.CompleteVerificationURL);
-            await _interaction.FollowupAsync(embed: embed.Build(), ephemeral: true, components: builder.Build());
+            await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true, components: builder.Build());
 
             var tokenResponse = await WaitForLoginApproval(request.Item1);
 
@@ -67,7 +69,8 @@ namespace YetAnotherFGBot
                 return;
             }
 
-            Console.WriteLine(tokenResponse.Item1.AccessToken);
+            EOSToken = tokenResponse.Item1.AccessToken;
+            Console.WriteLine(EOSToken);
         }
 
         async Task<(EOSDeviceAuth, HttpStatusCode)> CreateEOSLoginRequest()
