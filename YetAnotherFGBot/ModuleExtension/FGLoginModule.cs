@@ -78,7 +78,6 @@ namespace YetAnotherFGBot.ModuleExtension
             }
 
             EOSToken = tokenResponse.Item1.AccessToken;
-            Console.WriteLine(EOSToken);
 
             embed.Footer = null;
             embed.WithDescription($"Logging in Fall Guys...");
@@ -105,8 +104,8 @@ namespace YetAnotherFGBot.ModuleExtension
             if (fgToken.Item1.AdditionalProperties == null) return false;
 
             EOSName = fgToken.Item1.AdditionalProperties["EosDisplayName"];
-            Console.WriteLine(FGToken);
 
+            await Context.Interaction.DeleteOriginalResponseAsync();
             return !string.IsNullOrEmpty(EOSToken) && !string.IsNullOrEmpty(FGToken);
         }
 
