@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.VisualBasic;
 
 namespace YetAnotherFGBot
 {

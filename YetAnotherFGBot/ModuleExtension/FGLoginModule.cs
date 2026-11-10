@@ -23,7 +23,7 @@ namespace YetAnotherFGBot.ModuleExtension
         protected string? FGToken;
         protected string? EOSName;
 
-        internal async Task<bool> RequestFGLogin()
+        protected async Task<bool> RequestFGLogin()
         {
             var embed = new EmbedBuilder();
             var comp = new ComponentBuilder();
@@ -76,6 +76,10 @@ namespace YetAnotherFGBot.ModuleExtension
 
             EOSToken = tokenResponse.Item1.AccessToken;
             Console.WriteLine(EOSToken);
+
+            embed.Footer = null;
+            embed.WithDescription($"Logging in Fall Guys...");
+            await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
 
             var fgToken = await FGLogin();
             if (fgToken.Item1 == null || !fgToken.Item1.IsValid())

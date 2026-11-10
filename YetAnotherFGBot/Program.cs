@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Catapult.Runtime.Protocol;
+using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using System.Text.Json;
@@ -13,6 +14,9 @@ namespace YetAnotherFGBot
         public static async Task Main()
         {
             _config = JsonSerializer.Deserialize<Config>(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "config.json"))) ?? throw new InvalidOperationException();
+
+            RuntimeProtocol.Initialize(true);
+
             _bot = new(_config.BotToken);
 
             await Task.Delay(-1);
