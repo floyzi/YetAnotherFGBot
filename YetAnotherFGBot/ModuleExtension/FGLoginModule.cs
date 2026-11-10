@@ -42,7 +42,6 @@ namespace YetAnotherFGBot.ModuleExtension
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Coldn't obtain version info, try again later.");
                 await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
-                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
                 return false;
             }
 
@@ -52,7 +51,7 @@ namespace YetAnotherFGBot.ModuleExtension
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Unable to create login request (http {request.Item2}), try again later.");
-                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
                 return false;
             }
 
@@ -70,7 +69,11 @@ namespace YetAnotherFGBot.ModuleExtension
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Item2}), try again later.");
-                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                await ModifyOriginalResponseAsync(props =>
+                {
+                    props.Embed = embed.Build();
+                    props.Components = null;
+                });
                 return false;
             }
 
@@ -79,14 +82,22 @@ namespace YetAnotherFGBot.ModuleExtension
 
             embed.Footer = null;
             embed.WithDescription($"Logging in Fall Guys...");
-            await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+            await ModifyOriginalResponseAsync(props =>
+            {
+                props.Embed = embed.Build();
+                props.Components = null;
+            });
 
             var fgToken = await FGLogin();
             if (fgToken.Item1 == null || !fgToken.Item1.IsValid())
             {
                 embed.WithColor(Color.Red);
                 embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Item2}), try again later.");
-                await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true);
+                await ModifyOriginalResponseAsync(props =>
+                {
+                    props.Embed = embed.Build();
+                    props.Components = null;
+                });
                 return false;
             }
 
