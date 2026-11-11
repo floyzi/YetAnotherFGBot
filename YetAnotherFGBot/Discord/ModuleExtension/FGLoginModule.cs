@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.Net;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             public T? ExpectedResponse;
             public JsonElement Json;
             public HttpStatusCode Code;
+            public bool ValidJson => Json.ValueKind != JsonValueKind.Undefined && Json.ValueKind != JsonValueKind.Null;
             public bool Ok => ExpectedResponse != null && ExpectedResponse is not null;
 
             public async Task Set(HttpResponseMessage resp)
@@ -76,7 +78,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             if (!request.Ok || !request.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to create login request (http {request.Code}), try again later.");
+                embed.WithDescription($"Unable to create login request (http {request.Code}), try again later.{(request.ValidJson ? $"\n\n```json{request.Json}```" : "")}");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
                 return false;
@@ -96,7 +98,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             if (!tokenResponse.Ok || !tokenResponse.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Code}), try again later.");
+                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Code}), try again later.{(request.ValidJson ? $"\n\n```json{request.Json}```" : "")}");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await ModifyOriginalResponseAsync(props =>
                 {
@@ -122,7 +124,27 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             if (!fgToken.Ok || !fgToken.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.");
+                if (!fgToken.ValidJson)
+                    embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.");
+                else
+                {
+                    if (request.Json.TryGetProperty("errorCode", out var errCode) && errCode.TryGetInt32(out var code))
+                    {
+                        switch (code)
+                        {
+                            case 201000017:
+                                embed.WithDescription($"Your Fall Guys account was permanently banned and it can't be used for login.");
+                                break;
+                            default:
+                                embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), Fall Guys replied with unknown error code ``{code}``");
+                                break;
+                        }
+                    }
+                    else
+                        embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.\n\n```json{request.Json}```");
+
+                }
+
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await ModifyOriginalResponseAsync(props =>
                 {
