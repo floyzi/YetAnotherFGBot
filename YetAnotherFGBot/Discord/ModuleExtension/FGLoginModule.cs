@@ -78,14 +78,14 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             if (!request.Ok || !request.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to create login request (http {request.Code}), try again later.{(request.ValidJson ? $"\n\n```json{request.Json}```" : "")}");
+                embed.WithDescription($"Unable to create login request (http {request.Code}), try again later.{(request.ValidJson ? $"\n```\njson{request.Json}```" : "")}");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
                 return false;
             }
 
             embed.WithColor(Color.Orange);
-            embed.WithDescription($"This command requires you to log in, click on the button below (or [here]({request.ExpectedResponse.CompleteVerificationURL})) to continue.\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.\n-# See about to learn more how this works");
+            embed.WithDescription($"This command requires you to log in, click on the button below (or [here]({request.ExpectedResponse.CompleteVerificationURL})) to continue.\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.\n-# See about to learn more on how this works");
             embed.WithFooter($"Link will expire in {TimeSpan.FromSeconds(request.ExpectedResponse.ExpiresIn).Minutes} minutes");
             embed.WithThumbnailUrl(Emotes.InvisibeansRun.Url);
             embed.WithCurrentTimestamp();
@@ -98,7 +98,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             if (!tokenResponse.Ok || !tokenResponse.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Code}), try again later.{(request.ValidJson ? $"\n\n```json{request.Json}```" : "")}");
+                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Code}), try again later.{(request.ValidJson ? $"\n```json\n{request.Json}```" : "")}");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await ModifyOriginalResponseAsync(props =>
                 {
@@ -141,7 +141,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                         }
                     }
                     else
-                        embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.\n\n```json{request.Json}```");
+                        embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.\n```\njson{request.Json}```");
 
                 }
 
