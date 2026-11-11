@@ -13,6 +13,29 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
 {
     public class FGLoginModule : InteractionModuleBase<SocketInteractionContext>
     {
+        class HttpResponse<T>
+        {
+            public T? ExpectedResponse;
+            public JsonElement Json;
+            public HttpStatusCode Code;
+            public bool Ok => ExpectedResponse != null && ExpectedResponse is not null;
+
+            public async Task Set(HttpResponseMessage resp)
+            {
+                var responseBody = await resp.Content.ReadAsStringAsync();
+
+                try
+                {
+                    Code = resp.StatusCode;
+                    Json = JsonSerializer.Deserialize<JsonElement>(responseBody);
+                    ExpectedResponse = Json.Deserialize<T>();
+                }
+                catch
+                {
+                }
+            }
+        }
+
         const string VERSION_INFO = "https://floyzi-gitlab-io.vercel.app/fallguys/version.json";
         const string DEVICE_AUTH = "https://api.epicgames.dev/epic/oauth/v2/deviceAuthorization";
         const string EOS_V2_TOKEN = "https://api.epicgames.dev/epic/oauth/v2/token";
@@ -50,30 +73,30 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
 
             var request = await CreateEOSLoginRequest();
 
-            if (request.Item1 == null || !request.Item1.IsValid())
+            if (!request.Ok || !request.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to create login request (http {request.Item2}), try again later.");
+                embed.WithDescription($"Unable to create login request (http {request.Code}), try again later.");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await Context.Interaction.FollowupAsync(ephemeral: true, embed: embed.Build());
                 return false;
             }
 
             embed.WithColor(Color.Orange);
-            embed.WithDescription($"This command requires you to log in, click on the button below (or [here]({request.Item1.CompleteVerificationURL})) to continue.\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.\n-# See about to learn more how this works");
-            embed.WithFooter($"Link will expire in {TimeSpan.FromSeconds(request.Item1.ExpiresIn).Minutes} minutes");
+            embed.WithDescription($"This command requires you to log in, click on the button below (or [here]({request.ExpectedResponse.CompleteVerificationURL})) to continue.\nOnce you log in this message will be updated.\n\n-# Bot will only receive access to your Fall Guys account, not your Epic Account.\n-# None of the login information is saved externally.\n-# See about to learn more how this works");
+            embed.WithFooter($"Link will expire in {TimeSpan.FromSeconds(request.ExpectedResponse.ExpiresIn).Minutes} minutes");
             embed.WithThumbnailUrl(Emotes.InvisibeansRun.Url);
             embed.WithCurrentTimestamp();
 
-            var builder = comp.WithButton("Login", style: ButtonStyle.Link, url: request.Item1.CompleteVerificationURL);
+            var builder = comp.WithButton("Login", style: ButtonStyle.Link, url: request.ExpectedResponse.CompleteVerificationURL);
             await Context.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true, components: builder.Build());
 
-            var tokenResponse = await WaitForLoginApproval(request.Item1);
+            var tokenResponse = await WaitForLoginApproval(request.ExpectedResponse);
 
-            if (tokenResponse.Item1 == null || !tokenResponse.Item1.IsValid())
+            if (!tokenResponse.Ok || !tokenResponse.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Item2}), try again later.");
+                embed.WithDescription($"Unable to complete login attempt (http {tokenResponse.Code}), try again later.");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await ModifyOriginalResponseAsync(props =>
                 {
@@ -83,7 +106,7 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                 return false;
             }
 
-            EOSTokenResponse = tokenResponse.Item1;
+            EOSTokenResponse = tokenResponse.ExpectedResponse;
 
             embed.Footer = null;
             embed.WithDescription($"EOS login completed, logging in Fall Guys...");
@@ -96,10 +119,10 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             });
 
             var fgToken = await FGLogin();
-            if (fgToken.Item1 == null || !fgToken.Item1.IsValid())
+            if (!fgToken.Ok || !fgToken.ExpectedResponse!.IsValid())
             {
                 embed.WithColor(Color.Red);
-                embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Item2}), try again later.");
+                embed.WithDescription($"Unable to complete Fall Guys login attempt (http {tokenResponse.Code}), try again later.");
                 embed.WithThumbnailUrl(Emotes.Cross.Url);
                 await ModifyOriginalResponseAsync(props =>
                 {
@@ -109,17 +132,18 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                 return false;
             }
 
-            FGLoginResponse = fgToken.Item1;
-            if (fgToken.Item1.AdditionalProperties == null) return false;
+            FGLoginResponse = fgToken.ExpectedResponse;
+            if (fgToken.ExpectedResponse.AdditionalProperties == null) return false;
 
-            EOSName = fgToken.Item1.AdditionalProperties["EosDisplayName"];
+            EOSName = fgToken.ExpectedResponse.AdditionalProperties["EosDisplayName"];
 
             await Context.Interaction.DeleteOriginalResponseAsync();
             return !string.IsNullOrEmpty(EOSToken) && !string.IsNullOrEmpty(FGToken);
         }
 
-        async Task<(EOSDeviceAuth, HttpStatusCode)> CreateEOSLoginRequest()
+        async Task<HttpResponse<EOSDeviceAuth>> CreateEOSLoginRequest()
         {
+            var res = new HttpResponse<EOSDeviceAuth>();
             var client = new HttpClient();
 
             var response = await client.PostAsync(DEVICE_AUTH, new FormUrlEncodedContent(
@@ -129,24 +153,14 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                 new("client_secret", Version.ClientSecret)
             ]));
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+            await res.Set(response);
 
-            EOSDeviceAuth res;
-
-            try
-            {
-                res = JsonSerializer.Deserialize<EOSDeviceAuth>(responseBody)!;
-            }
-            catch
-            {
-                res = null!;
-            }
-
-            return new(res, response.StatusCode);
+            return res;
         }
 
-        async Task<(EOSTokenResponse, HttpStatusCode)> WaitForLoginApproval(EOSDeviceAuth loginRequest)
+        async Task<HttpResponse<EOSTokenResponse>> WaitForLoginApproval(EOSDeviceAuth loginRequest)
         {
+            var res = new HttpResponse<EOSTokenResponse>();
             var sw = new Stopwatch();
             sw.Start();
 
@@ -179,20 +193,9 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
                     continue;
                 }
 
-                var responseBody = await response.Content.ReadAsStringAsync();
+                await res.Set(response);
 
-                EOSTokenResponse res;
-
-                try
-                {
-                    res = JsonSerializer.Deserialize<EOSTokenResponse>(responseBody)!;
-                }
-                catch
-                {
-                    res = null!;
-                }
-
-                return new(res, response.StatusCode);
+                return res;
             }
 
             sw.Stop();
@@ -200,10 +203,11 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             return new();
         }
 
-        async Task<(HttpLoginResponse, HttpStatusCode)> FGLogin()
+        async Task<HttpResponse<HttpLoginResponse>> FGLogin()
         {
             if (string.IsNullOrEmpty(EOSToken)) throw new InvalidOperationException();
 
+            var res = new HttpResponse<HttpLoginResponse>();
             using var client = new HttpClient();
 
             var loginReq = new HttpRequestMessage(HttpMethod.Post, FG_LOGIN)
@@ -213,23 +217,11 @@ namespace YetAnotherFGBot.Discord.ModuleExtension
             loginReq.Headers.Add("X-Unity-Version", Version!.UnityVersion);
             loginReq.Headers.Add("User-Agent", $"UnityPlayer/{Version.UnityVersion} (UnityWebRequest/1.0, libcurl/7.84.0-DEV)");
 
-
             var authResp = await client.SendAsync(loginReq);
-            var authRespBody = await authResp.Content.ReadAsStringAsync();
 
+            await res.Set(authResp);
 
-            if (authResp.StatusCode != HttpStatusCode.OK)
-                return new(null!, authResp.StatusCode);
-
-            try
-            {
-                var json = JsonSerializer.Deserialize<HttpLoginResponse>(authRespBody);
-                return new(json!, authResp.StatusCode);
-            }
-            catch
-            {
-                return new(null!, authResp.StatusCode);
-            }
+            return res;
         }
     }
 }
